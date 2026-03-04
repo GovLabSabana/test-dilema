@@ -976,17 +976,20 @@ p.landing-outro {
     gap: 0.6rem;
 }
 
-.profile-tag {
+.know-answers-link {
     font-size: 0.85rem;
-    background: var(--primary-light);
     color: var(--primary);
-    padding: 4px 12px;
-    border-radius: 8px;
+    padding: 4px 0;
     margin-top: 8px;
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     font-weight: 600;
-    border: 1px solid var(--primary-light);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.candidate-card:hover .know-answers-link {
+    opacity: 1;
+    text-decoration: underline;
 }
 
 /* Colores específicos según orientación política */

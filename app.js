@@ -433,12 +433,10 @@ function showCandidateDetail(candidate, fromResults = false) {
     // Use a default image if not found
     const detailPhotoPath = candidate.photo || 'https://via.placeholder.com/150?text=Candidato';
     const detailPartyPath = candidate.partyLogo || 'https://via.placeholder.com/60?text=P';
-    const detailProfilePath = candidate.profilePic ? `<img src="${candidate.profilePic}" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 10px;">` : '';
-
     detailPhoto.src = detailPhotoPath;
     detailName.innerText = candidate.name;
     detailParty.innerHTML = `<img src="${detailPartyPath}" style="height: 24px; vertical-align: middle; margin-right: 8px;"> ${candidate.party}`;
-    detailProfile.innerHTML = `<div class="profile-tag profile-${(candidate.profile || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s\/_]+/g, '-')}">${detailProfilePath}${(candidate.profile || '').replace(/_/g, ' ')}</div>`;
+    detailProfile.innerHTML = '';
 
     // Campaign URL button
     const campaignBtn = document.getElementById('campaign-url-btn');
@@ -588,7 +586,6 @@ function showResults() {
         // Use a default image if not found
         const photoPath = c.photo || 'https://via.placeholder.com/150?text=Candidato';
         const partyPath = c.partyLogo || 'https://via.placeholder.com/60?text=P';
-        const profilePath = c.profilePic ? `<img src="${c.profilePic}" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 10px;">` : '';
 
         card.innerHTML = `
             <div class="rank-number">#${index + 1}</div>
@@ -599,7 +596,7 @@ function showResults() {
             <div class="candidate-info">
                 <div class="candidate-name">${c.name}</div>
                 <div class="candidate-party">${c.party}</div>
-                <div class="profile-tag profile-${(c.profile || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[\s\/_]+/g, '-')}">${profilePath}${(c.profile || '').replace(/_/g, ' ')}</div>
+                <div class="know-answers-link">Conoce las respuestas de este candidato</div>
                 <div class="match-bar-bg">
                     <div class="match-bar-fill" style="width: ${c.percentage}%"></div>
                 </div>
