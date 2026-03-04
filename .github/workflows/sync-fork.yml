@@ -1,0 +1,20 @@
+name: Sync fork to GovLabSabana
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to GovLabSabana fork
+        run: |
+          git remote add govlab https://x-access-token:${{ secrets.GOVLAB_TOKEN }}@github.com/GovLabSabana/test-dilema.git
+          git push govlab main --force
