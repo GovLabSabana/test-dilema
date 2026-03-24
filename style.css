@@ -1351,3 +1351,424 @@ p.landing-outro {
         padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
 }
+
+/* ==========================================================================
+   Perfil del Votante
+   ========================================================================== */
+
+#voter-profile-section {
+    margin-top: 0;
+    margin-bottom: 2rem;
+}
+
+.voter-profile-heading {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.9rem;
+}
+
+.voter-profile-card {
+    background: var(--profile-bg, rgba(30, 59, 112, 0.08));
+    border: 2px solid var(--profile-color, var(--primary-border));
+    border-radius: 24px;
+    padding: 1.8rem 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.voter-profile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.voter-profile-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--profile-color, var(--primary));
+    border-radius: 24px 24px 0 0;
+}
+
+.voter-profile-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    margin-bottom: 1.1rem;
+    opacity: 0.8;
+}
+
+.voter-profile-content {
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+}
+
+.voter-profile-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid var(--primary-border);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.voter-profile-icon-placeholder {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid var(--primary-border);
+    background: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.voter-profile-info {
+    flex: 1;
+}
+
+.voter-profile-name {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
+}
+
+.voter-profile-description {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+
+/* ==========================================================================
+   Ranking de Votantes
+   ========================================================================== */
+
+.voters-ranking-section {
+    margin-top: 2.5rem;
+}
+
+.voters-ranking-header {
+    margin-bottom: 1.2rem;
+}
+
+.voters-ranking-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 0.2rem 0;
+}
+
+.voters-ranking-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.voters-ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+.voters-ranking-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.voters-ranking-list::-webkit-scrollbar-thumb {
+    background: rgba(30, 59, 112, 0.15);
+    border-radius: 3px;
+}
+
+.voter-ranking-row {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: rgba(30, 59, 112, 0.035);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    padding: 0.7rem 1rem;
+    transition: background 0.2s;
+}
+
+.voter-ranking-row:hover {
+    background: var(--primary-light);
+}
+
+.voter-rank-num {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--primary);
+    min-width: 36px;
+    opacity: 0.7;
+}
+
+.voter-rank-name {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.voter-profile-badge {
+    font-size: 0.73rem;
+    font-weight: 700;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid var(--primary-border);
+    border-radius: 99px;
+    padding: 0.18rem 0.65rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.voters-ranking-loading,
+.voters-ranking-empty {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+/* Tarjetas de candidatos sin porcentaje (rank-only) */
+.candidate-card.rank-only {
+    /* El flex layout sin la columna de porcentaje */
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .voter-profile-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .voter-profile-name {
+        font-size: 1.2rem;
+    }
+
+    .voters-ranking-list {
+        max-height: 280px;
+    }
+
+    .voter-rank-name {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .voter-profile-card {
+        padding: 1.4rem 1.2rem;
+    }
+
+    .voter-profile-icon,
+    .voter-profile-icon-placeholder {
+        width: 58px;
+        height: 58px;
+    }
+
+    .voter-profile-name {
+        font-size: 1.1rem;
+    }
+}
+
+/* --- Chevron link on profile card --- */
+.voter-profile-chevron {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--profile-color, var(--primary));
+    white-space: nowrap;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    margin-left: 0.5rem;
+}
+
+.voter-profile-card:hover .voter-profile-chevron {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Modal: Ranking de Perfiles de Votante
+   ========================================================================== */
+
+.profiles-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.profiles-modal-box {
+    background: #fff;
+    border-radius: 24px;
+    padding: 2rem;
+    max-width: 540px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    -webkit-overflow-scrolling: touch;
+}
+
+.profiles-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+}
+
+.profiles-modal-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0;
+}
+
+.profiles-modal-close {
+    background: rgba(30, 59, 112, 0.07);
+    border: none;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.profiles-modal-close:hover {
+    background: rgba(30, 59, 112, 0.15);
+    color: var(--text-main);
+}
+
+.profiles-modal-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin: 0 0 1.4rem 0;
+}
+
+.profiles-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.profile-rank-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+}
+
+.profile-rank-pos {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    min-width: 30px;
+}
+
+.profile-rank-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+}
+
+.profile-rank-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-rank-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.15rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-rank-desc {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 0.4rem;
+    /* allow wrapping for descriptions */
+    white-space: normal;
+}
+
+.profile-rank-bar-bg {
+    width: 100%;
+    height: 7px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 99px;
+    overflow: hidden;
+}
+
+.profile-rank-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.profile-rank-pct {
+    font-size: 1rem;
+    font-weight: 800;
+    min-width: 44px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .profiles-modal-box {
+        padding: 1.4rem 1.2rem;
+        border-radius: 20px;
+    }
+
+    .profile-rank-row {
+        gap: 0.6rem;
+        padding: 0.7rem 0.8rem;
+    }
+
+    .profile-rank-icon {
+        font-size: 1.3rem;
+    }
+
+    .voter-profile-chevron {
+        display: none;
+    }
+}
+

@@ -151,7 +151,13 @@
         <!-- Results Screen -->
         <div id="results-screen" class="glass-card hidden">
             <h1 id="results-title">Tus Resultados</h1>
-            <p id="results-subtitle" class="description">Este es el ranking de afinidad con los candidatos basado en tus
+
+            <!-- Perfil del votante asignado (encima de los candidatos) -->
+            <div id="voter-profile-section" class="hidden">
+                <!-- Injected by renderVoterProfileCard() -->
+            </div>
+
+            <p id="results-subtitle" class="description" style="margin-top: 1.5rem;">Este es el ranking de afinidad con los candidatos basado en tus
                 respuestas:</p>
 
             <div id="results-list" class="results-list">
@@ -170,7 +176,9 @@
                         Convergencia Electoral 2026</span>
                 </div>
                 <p id="share-card-title" class="share-card-user-title"
-                    style="font-size: 1.05rem; font-weight: 600; margin: 0 0 1rem 0;"></p>
+                    style="font-size: 1.05rem; font-weight: 600; margin: 0 0 0.8rem 0;"></p>
+                <!-- Perfil del votante en la tarjeta compartible -->
+                <div id="share-card-profile" style="display:none; margin-bottom: 0.9rem;"></div>
                 <div id="share-card-candidates" class="share-card-candidates"
                     style="display: flex; flex-direction: column; gap: 0.75rem;"></div>
                 <div

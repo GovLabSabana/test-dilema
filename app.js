@@ -1,16 +1,101 @@
-﻿// --- Supabase REST API ---
+// --- Supabase REST API ---
 const SUPABASE_URL = 'https://vsvzquvcuhsngjvdwdnc.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_DJ1mK2CAQLRfYLx17u3_oQ_EL6P_9gE';
 
 let lastResponseId = null; // guarda el id de la última respuesta guardada
 
-async function saveResponse(answers, sortedCandidates) {
+// --- Perfiles de Votante: metadata de colores por nombre ---
+const PROFILE_META = {
+    'El Pragmático':        { color: '#596377', bg: '#f0f2f5' },
+    'El Progresista':       { color: '#a30016', bg: '#fef2f2' },
+    'El Institucionalista': { color: '#0057e4', bg: '#f0f4ff' },
+    'El Liberal':           { color: '#e91212', bg: '#fff0f0' },
+    'El Ambientalista':     { color: '#5cb413', bg: '#f0fdf4' },
+    'El Reaccionario':      { color: '#222222', bg: '#f5f5f5' },
+    'El Tecnocrático':      { color: '#d1a000', bg: '#fffbeb' },
+};
+
+// SVG path data – 24×24 viewBox, stroke-based icons
+const PROFILE_ICON_SVGS = {
+    'El Pragmático': // Scales / Balance
+        `<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+         <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+         <path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/>`,
+    'El Progresista': // People / Community
+        `<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+         <circle cx="9" cy="7" r="4"/>
+         <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>`,
+    'El Institucionalista': // Building columns
+        `<line x1="3" y1="22" x2="21" y2="22"/>
+         <line x1="2" y1="9" x2="22" y2="9"/>
+         <path d="M12 2L2 9h20L12 2z"/>
+         <line x1="5" y1="9" x2="5" y2="22"/><line x1="9" y1="9" x2="9" y2="22"/>
+         <line x1="15" y1="9" x2="15" y2="22"/><line x1="19" y1="9" x2="19" y2="22"/>`,
+    'El Liberal': // Flag
+        `<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+         <line x1="4" y1="22" x2="4" y2="15"/>`,
+    'El Ambientalista': // Leaf
+        `<path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+         <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>`,
+    'El Reaccionario': // Sword
+        `<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
+         <line x1="13" y1="19" x2="19" y2="13"/>
+         <line x1="16" y1="16" x2="20" y2="20"/>
+         <line x1="19" y1="21" x2="21" y2="19"/>`,
+    'El Tecnocrático': // CPU chip
+        `<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/>
+         <line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/>
+         <line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/>
+         <line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="14" x2="22" y2="14"/>
+         <line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="14" x2="4" y2="14"/>`,
+};
+
+function getProfileMeta(name) {
+    return PROFILE_META[name] || { color: '#1e3b70', bg: '#eff6ff' };
+}
+
+function getProfileIconSVG(name, color = 'currentColor', size = 32) {
+    const paths = PROFILE_ICON_SVGS[name] || '<circle cx="12" cy="12" r="8"/>';
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+        stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+}
+
+// assignVoterProfile: devuelve el perfil con mayor similitud
+function assignVoterProfile(userAnswers, voterProfiles) {
+    if (!voterProfiles || voterProfiles.length === 0) return null;
+    const ranked = rankVoterProfiles(userAnswers, voterProfiles);
+    return ranked.length > 0 ? ranked[0].profile : voterProfiles[0];
+}
+
+// rankVoterProfiles: devuelve todos los perfiles ordenados por % de similitud
+function rankVoterProfiles(userAnswers, voterProfiles) {
+    const results = [];
+    voterProfiles.forEach(profile => {
+        const typeAnswers = profile.type_answers || {};
+        const keys = Object.keys(typeAnswers);
+        if (keys.length === 0) return;
+        let matches = 0;
+        keys.forEach(qid => {
+            if (userAnswers[qid] && userAnswers[qid] === typeAnswers[qid]) matches++;
+        });
+        results.push({
+            profile,
+            score: matches / keys.length,
+            percentage: Math.round((matches / keys.length) * 100)
+        });
+    });
+    results.sort((a, b) => b.score - a.score);
+    return results;
+}
+
+async function saveResponse(answers, sortedCandidates, voterProfileId) {
     try {
         const row = {
             respondent_name: userName || 'Anónimo',
             top_candidate: sortedCandidates[0].name,
             top_percentage: sortedCandidates[0].percentage,
-            results: sortedCandidates.map(c => ({ name: c.name, percentage: c.percentage }))
+            results: sortedCandidates.map(c => ({ name: c.name, percentage: c.percentage })),
+            voter_profile_id: voterProfileId || null
         };
         Object.entries(answers).forEach(([id, answer]) => {
             row[`q${id}`] = answer;
@@ -31,7 +116,6 @@ async function saveResponse(answers, sortedCandidates) {
             const [data] = await response.json();
             lastResponseId = data?.id || null;
             console.log('[Supabase] Respuesta guardada. ID:', lastResponseId);
-            // Habilitar el botón de comentario ahora que tenemos el ID
             const btn = document.getElementById('feedback-submit-btn');
             if (btn) {
                 btn.disabled = false;
@@ -40,7 +124,6 @@ async function saveResponse(answers, sortedCandidates) {
         } else {
             const errText = await response.text();
             console.warn('[Supabase] Error al guardar:', response.status, errText);
-            // El botón queda deshabilitado si no se pudo guardar
             const btn = document.getElementById('feedback-submit-btn');
             if (btn) btn.textContent = 'No disponible';
         }
@@ -73,12 +156,13 @@ async function saveComment(comment) {
         return false;
     }
 }
+
 // --- Fin Supabase ---
 
 // --- Compartir resultados ---
 const MEDALS = ['🥇', '🥈', '🥉'];
 
-function populateShareCard(top3) {
+function populateShareCard(top3, voterProfile) {
     const title = document.getElementById('share-card-title');
     const container = document.getElementById('share-card-candidates');
     title.textContent = userName
@@ -92,19 +176,36 @@ function populateShareCard(top3) {
                 <span class="share-candidate-name">${c.name}</span>
                 <span class="share-candidate-party">${c.party}</span>
             </div>
-            <span class="share-pct">${c.percentage}%</span>
         </div>
     `).join('');
+
+    // Perfil del votante en la tarjeta
+    const profileEl = document.getElementById('share-card-profile');
+    if (profileEl && voterProfile) {
+        const meta = getProfileMeta(voterProfile.name);
+        const iconSvg = getProfileIconSVG(voterProfile.name, meta.color, 26);
+        profileEl.style.display = 'block';
+        profileEl.innerHTML = `
+            <div style="display:flex; align-items:center; gap:0.7rem; background:${meta.bg};
+                        border:1.5px solid ${meta.color}40; border-radius:12px;
+                        padding:0.55rem 0.9rem;">
+                <div style="width:26px;height:26px;flex-shrink:0;">${iconSvg}</div>
+                <div>
+                    <span style="font-size:0.6rem;font-weight:700;color:#64748b;
+                                 text-transform:uppercase;letter-spacing:.08em;display:block;">Tu perfil</span>
+                    <span style="font-size:0.88rem;font-weight:700;color:${meta.color};">${voterProfile.name}</span>
+                </div>
+            </div>`;
+    }
 }
 
 async function captureCard() {
     const card = document.getElementById('share-card');
-    // Mostrar tarjeta temporalmente fuera de pantalla para capturarla
     card.style.position = 'fixed';
     card.style.left = '-9999px';
     card.style.top = '0';
     card.style.display = 'block';
-    await new Promise(r => setTimeout(r, 150)); // esperar render de imágenes
+    await new Promise(r => setTimeout(r, 150));
     const canvas = await html2canvas(card, {
         backgroundColor: '#0f172a',
         scale: 2,
@@ -136,7 +237,7 @@ async function captureAndDownload() {
 }
 
 function getShareText(top3) {
-    const names = top3.slice(0, 3).map((c, i) => `${MEDALS[i]} ${c.name} (${c.percentage}%)`).join(' ');
+    const names = top3.slice(0, 3).map((c, i) => `${MEDALS[i]} ${c.name}`).join(' ');
     const siteUrl = 'https://test-dilema-production.up.railway.app/';
     return userName
         ? `${userName} hizo el test Convergencia Electoral 2026 del Govlab de la Universidad de la Sabana 🗳️\n\nSus candidatos con mayor afinidad son:\n${names}\n\n¿Cuál es el tuyo? ${siteUrl}`
@@ -147,7 +248,6 @@ async function shareToPlatform(platform, top3) {
     const text = getShareText(top3);
     const siteUrl = 'https://test-dilema-production.up.railway.app/';
 
-    // Si estamos en un dispositivo móvil con Web Share API, es la forma nativa de enviar la imagen directamente a la app.
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (isMobile && navigator.share && navigator.canShare) {
@@ -173,8 +273,6 @@ async function shareToPlatform(platform, top3) {
         }
     }
 
-    // Comportamiento Desktop (o si Web Share no soporta archivos):
-    // Como las páginas web no pueden adjuntar imágenes a URLs de Twitter/Facebook, descargamos la imagen primero.
     if (platform === 'native') {
         captureAndDownload();
         setTimeout(() => {
@@ -313,17 +411,25 @@ async function init() {
             'Authorization': `Bearer ${SUPABASE_KEY}`
         };
 
-        // Carga en paralelo: preguntas (con opciones) + candidatos (con respuestas)
-        const [qRes, cRes] = await Promise.all([
+        // Carga en paralelo: preguntas + candidatos + perfiles de votante
+        const [qRes, cRes, vpRes] = await Promise.all([
             fetch(`${SUPABASE_URL}/rest/v1/questions?select=id,text,context,question_options(option_key,option_text)&order=id`, { headers }),
-            fetch(`${SUPABASE_URL}/rest/v1/candidates?select=id,name,party,profile,description,campaign_url,photo_url,party_logo_url,profile_pic_url,candidate_answers(question_id,answer)&order=id`, { headers })
+            fetch(`${SUPABASE_URL}/rest/v1/candidates?select=id,name,party,profile,description,campaign_url,photo_url,party_logo_url,profile_pic_url,candidate_answers(question_id,answer)&order=id`, { headers }),
+            fetch(`${SUPABASE_URL}/rest/v1/voter_profiles?select=id,name,description,icon_url,type_answers&order=id`, { headers })
         ]);
 
         if (!qRes.ok || !cRes.ok) throw new Error('Error al cargar datos de Supabase');
 
         const [rawQuestions, rawCandidates] = await Promise.all([qRes.json(), cRes.json()]);
 
-        // Reconstruir formato compatible con el resto del app
+        // Los perfiles de votante pueden fallar sin romper la app (tabla puede no existir aún)
+        let voterProfiles = [];
+        if (vpRes.ok) {
+            voterProfiles = await vpRes.json();
+        } else {
+            console.warn('[Supabase] No se pudo cargar voter_profiles:', vpRes.status);
+        }
+
         const questions = rawQuestions.map(q => ({
             id: q.id,
             text: q.text,
@@ -348,8 +454,8 @@ async function init() {
             )
         }));
 
-        quizData = { questions, candidates };
-        console.log(`[Supabase] Datos cargados: ${questions.length} preguntas, ${candidates.length} candidatos`);
+        quizData = { questions, candidates, voterProfiles };
+        console.log(`[Supabase] Datos cargados: ${questions.length} preguntas, ${candidates.length} candidatos, ${voterProfiles.length} perfiles de votante`);
     } catch (error) {
         console.error('[Supabase] Error cargando datos:', error);
         alert('Error al cargar los datos. Por favor recarga la página.');
@@ -430,7 +536,6 @@ function showCandidateDetail(candidate, fromResults = false) {
     candidateDetailView.classList.remove('hidden');
     candidateDetailView.classList.add('animate-in');
 
-    // Use a default image if not found
     const detailPhotoPath = candidate.photo || 'https://via.placeholder.com/150?text=Candidato';
     const detailPartyPath = candidate.partyLogo || 'https://via.placeholder.com/60?text=P';
     detailPhoto.src = detailPhotoPath;
@@ -438,19 +543,15 @@ function showCandidateDetail(candidate, fromResults = false) {
     detailParty.innerHTML = `<img src="${detailPartyPath}" style="height: 24px; vertical-align: middle; margin-right: 8px;"> ${candidate.party}`;
     detailProfile.innerHTML = '';
 
-    // Campaign URL button
     const campaignBtn = document.getElementById('campaign-url-btn');
     if (candidate.campaignUrl) {
         campaignBtn.href = candidate.campaignUrl;
         campaignBtn.classList.remove('hidden');
     } else {
-        // fallback: show button linking to a web search if no URL found
         campaignBtn.href = `https://www.google.com/search?q=${encodeURIComponent(candidate.name + ' candidato presidencia Colombia 2026')}`;
         campaignBtn.classList.remove('hidden');
     }
 
-
-    // Inject profile description
     const profileTextContainer = document.getElementById('candidate-profile-text');
     if (profileTextContainer) {
         profileTextContainer.innerHTML = candidate.description ? candidate.description.split('\n\n').map(p => `<p>${p}</p>`).join('') : '';
@@ -462,6 +563,33 @@ function showCandidateDetail(candidate, fromResults = false) {
             <p>Estas no son necesariamente las respuestas oficiales dadas por el candidato. Representan lo que, de forma interna, el <strong>Laboratorio de Gobierno (GovLab)</strong> considera que serían sus posiciones frente a este dilema.</p>
         </div>
     `;
+
+    // Calcular y mostrar el perfil más afín al candidato
+    if (quizData.voterProfiles && quizData.voterProfiles.length > 0) {
+        const candidateProfiles = rankVoterProfiles(candidate.answers, quizData.voterProfiles).slice(0, 1);
+        
+        let profilesHtml = '<div style="margin: 2rem 0 1.5rem;"><h4 style="margin-bottom: 1rem; color: var(--text-main); font-size: 1.1rem;">Perfil de votante más afín:</h4><div class="profiles-modal-list">';
+        candidateProfiles.forEach((item, i) => {
+            const meta = getProfileMeta(item.profile.name);
+            const iconSvg = getProfileIconSVG(item.profile.name, meta.color, 28);
+            const rowBg = meta.color + '18';
+            profilesHtml += `
+                <div class="profile-rank-row animate-in" style="--profile-color: ${meta.color}; background: ${rowBg}; border-color: ${meta.color}40; padding: 0.7rem 0.9rem; animation-delay: ${i * 0.1}s;">
+                    <span class="profile-rank-pos">#${i + 1}</span>
+                    <span class="profile-rank-icon" style="font-size: 1.3rem;">${iconSvg}</span>
+                    <div class="profile-rank-info">
+                        <span class="profile-rank-name" style="color: ${meta.color}; margin-bottom: 0.2rem;">${item.profile.name}</span>
+                        <div class="profile-rank-bar-bg" style="height: 5px;">
+                            <div class="profile-rank-bar-fill" style="width: ${item.percentage}%; background: ${meta.color};"></div>
+                        </div>
+                    </div>
+                    <span class="profile-rank-pct" style="color: ${meta.color}; font-size: 0.95rem;">${item.percentage}%</span>
+                </div>`;
+        });
+        profilesHtml += '</div></div><h4 style="margin-bottom: 1rem; color: var(--text-main); border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">Respuestas al cuestionario:</h4>';
+        answersList.innerHTML += profilesHtml;
+    }
+
 
     quizData.questions.forEach(q => {
         const answerKey = candidate.answers[q.id];
@@ -479,10 +607,8 @@ function showCandidateDetail(candidate, fromResults = false) {
 }
 
 function showQuestion() {
-    // ... existing logic ...
     const question = quizData.questions[currentQuestionIndex];
 
-    // Check if question has any valid options
     const validOptions = Object.entries(question.options).filter(([key, value]) => value !== null && value !== undefined && value !== '');
 
     if (validOptions.length === 0) {
@@ -526,7 +652,7 @@ function selectOption(optionKey) {
     }
 }
 
-function showResults() {
+async function showResults() {
     quizScreen.classList.add('hidden');
     resultsScreen.classList.remove('hidden');
     resultsScreen.classList.add('animate-in');
@@ -536,7 +662,7 @@ function showResults() {
     const resultsSubtitle = document.getElementById('results-subtitle');
     if (userName) {
         resultsTitle.textContent = `${userName}, estos son tus resultados`;
-        resultsSubtitle.textContent = `Tienes más afinidad con los siguientes candidatos:`;
+        resultsSubtitle.textContent = `Estos son los candidatos con mayor afinidad a tus respuestas:`;
     } else {
         resultsTitle.textContent = 'Tus Resultados';
         resultsSubtitle.textContent = 'Este es el ranking de afinidad con los candidatos basado en tus respuestas:';
@@ -563,8 +689,16 @@ function showResults() {
         return { ...candidate, percentage: Math.round(percentage) };
     });
 
-    // Sort by percentage descending
     candidates.sort((a, b) => b.percentage - a.percentage);
+
+    // Asignar perfil de votante
+    const voterProfiles = quizData.voterProfiles || [];
+    const normalizedAnswers = Object.fromEntries(Object.entries(userAnswers).map(([k, v]) => [String(k), v]));
+    const rankedProfiles = rankVoterProfiles(normalizedAnswers, voterProfiles);
+    const assignedProfile = rankedProfiles.length > 0 ? rankedProfiles[0].profile : null;
+
+    // Mostrar perfil del votante
+    renderVoterProfileCard(assignedProfile, rankedProfiles);
 
     // Deshabilitar botón de comentario hasta que el guardado termine
     const fbBtn = document.getElementById('feedback-submit-btn');
@@ -574,16 +708,16 @@ function showResults() {
     }
 
     // Guardar en Supabase (sin bloquear la UI)
-    saveResponse(userAnswers, candidates);
+    saveResponse(userAnswers, candidates, assignedProfile ? assignedProfile.id : null);
 
+    // Renderizar candidatos CON porcentajes
     resultsList.innerHTML = '';
     candidates.forEach((c, index) => {
         const card = document.createElement('div');
-        card.className = 'candidate-card';
+        card.className = 'candidate-card rank-only';
         card.style.cursor = 'pointer';
         card.onclick = () => showCandidateDetail(c, true);
 
-        // Use a default image if not found
         const photoPath = c.photo || 'https://via.placeholder.com/150?text=Candidato';
         const partyPath = c.partyLogo || 'https://via.placeholder.com/60?text=P';
 
@@ -595,29 +729,125 @@ function showResults() {
             </div>
             <div class="candidate-info">
                 <div class="candidate-name">${c.name}</div>
-                <div class="candidate-party">${c.party}</div>
-                <div class="know-answers-link">Conoce las respuestas de este candidato</div>
-                <div class="match-bar-bg">
-                    <div class="match-bar-fill" style="width: ${c.percentage}%"></div>
+                <div class="candidate-party" style="display:flex; align-items:center; gap:0.5rem;">
+                    ${c.party}
+                    <span style="font-size:0.85rem; font-weight:700; color:var(--primary); margin-left:auto;">${c.percentage}%</span>
                 </div>
-            </div>
-            <div class="match-percentage">
-                <div class="percentage-value">${c.percentage}%</div>
-                <div class="percentage-label">Afinidad</div>
+                <div style="height:5px; background:rgba(30,59,112,0.1); border-radius:99px; margin:0.4rem 0 0.3rem; overflow:hidden;">
+                    <div style="height:100%; width:${c.percentage}%; background:var(--primary); border-radius:99px; transition:width 0.6s ease;"></div>
+                </div>
+                <div class="know-answers-link">Conoce las respuestas de este candidato</div>
             </div>
         `;
         resultsList.appendChild(card);
     });
 
-    // Llenar y conectar botones de compartir con los top 3
+    // Conectar botones de compartir
     const top3 = candidates.slice(0, 3);
-    populateShareCard(top3);
+    populateShareCard(top3, assignedProfile);
     document.getElementById('btn-download').onclick = () => captureAndDownload();
     document.getElementById('btn-share-native').onclick = () => shareToPlatform('native', top3);
     document.getElementById('btn-twitter').onclick = () => shareToPlatform('twitter', top3);
     document.getElementById('btn-facebook').onclick = () => shareToPlatform('facebook', top3);
     document.getElementById('btn-whatsapp').onclick = () => shareToPlatform('whatsapp', top3);
     document.getElementById('btn-instagram').onclick = () => shareToPlatform('instagram', top3);
+}
+
+function renderVoterProfileCard(profile, rankedProfiles) {
+    const section = document.getElementById('voter-profile-section');
+    if (!section) return;
+
+    if (!profile) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+    const meta = getProfileMeta(profile.name);
+    const iconSvg = getProfileIconSVG(profile.name, meta.color, 44);
+
+    section.innerHTML = `
+        <h3 class="voter-profile-heading">Tu perfil de votante</h3>
+        <div class="voter-profile-card animate-in" id="voter-profile-card-btn"
+             style="--profile-color: ${meta.color}; --profile-bg: ${meta.bg}; cursor: pointer;"
+             title="Haz clic para ver el ranking de todos los perfiles">
+            <div class="voter-profile-content">
+                <div class="voter-profile-icon-placeholder" style="background: ${meta.bg}; border-color: ${meta.color};">${iconSvg}</div>
+                <div class="voter-profile-info">
+                    <div class="voter-profile-name" style="color: ${meta.color};">${profile.name}</div>
+                    ${profile.description ? `<div class="voter-profile-description">${profile.description}</div>` : ''}
+                </div>
+                <div class="voter-profile-chevron">Ver ranking ›</div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('voter-profile-card-btn').addEventListener('click', () => {
+        showProfilesModal(rankedProfiles);
+    });
+}
+
+function showProfilesModal(rankedProfiles) {
+    const existing = document.getElementById('profiles-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'profiles-modal';
+    modal.className = 'profiles-modal-overlay';
+    modal.innerHTML = `
+        <div class="profiles-modal-box animate-in">
+            <div class="profiles-modal-header">
+                <h3 class="profiles-modal-title">Ranking de perfiles de votante</h3>
+                <button class="profiles-modal-close" id="profiles-modal-close">✕</button>
+            </div>
+            <p class="profiles-modal-subtitle">Similitud de tus respuestas con cada perfil</p>
+            <div class="profiles-modal-list">
+                ${rankedProfiles.map((item, i) => {
+        const meta = getProfileMeta(item.profile.name);
+        const iconSvg = getProfileIconSVG(item.profile.name, meta.color, 32);
+        const rowBg = meta.color + '18'; // ~9% opacity — always a diluted version of the border color
+        const desc = item.profile.description || '';
+        return `
+                    <div class="profile-rank-row" style="--profile-color: ${meta.color}; background: ${rowBg}; border-color: ${meta.color}40;">
+                        <span class="profile-rank-pos">#${i + 1}</span>
+                        <span class="profile-rank-icon">${iconSvg}</span>
+                        <div class="profile-rank-info">
+                            <span class="profile-rank-name" style="color: ${meta.color};">${item.profile.name}</span>
+                            ${desc ? `<span class="profile-rank-desc">${desc}</span>` : ''}
+                            <div class="profile-rank-bar-bg">
+                                <div class="profile-rank-bar-fill" style="width: ${item.percentage}%; background: ${meta.color};"></div>
+                            </div>
+                        </div>
+                        <span class="profile-rank-pct" style="color: ${meta.color};">${item.percentage}%</span>
+                    </div>`;
+    }).join('')}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('profiles-modal-close').addEventListener('click', closeProfilesModal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeProfilesModal(); });
+    document.addEventListener('keydown', escCloseModal);
+}
+
+function escCloseModal(e) {
+    if (e.key === 'Escape') closeProfilesModal();
+}
+
+function closeProfilesModal() {
+    const modal = document.getElementById('profiles-modal');
+    if (modal) modal.remove();
+    document.removeEventListener('keydown', escCloseModal);
+}
+
+function escapeHtml(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 }
 
 startBtn.onclick = showNameScreen;
