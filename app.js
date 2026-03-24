@@ -60,6 +60,46 @@ function getProfileIconSVG(name, color = 'currentColor', size = 32) {
         stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 }
 
+const OPTION_SCORES = {
+    1: {'A': 100, 'B': 0, 'C': 10, 'D': 30, 'E': 50},
+    2: {'A': 80, 'B': 100, 'C': 30, 'D': 0, 'E': 90},
+    3: {'A': 100, 'B': 0, 'C': 50, 'D': 20, 'E': 10},
+    4: {'A': 80, 'B': 0, 'C': 50, 'D': 20, 'E': 60},
+    5: {'A': 100, 'B': 50, 'C': 0, 'D': 20, 'E': 80},
+    6: {'A': 0, 'B': 100, 'C': 20, 'D': 50, 'E': 40},
+    7: {'A': 100, 'B': 0, 'C': 80, 'D': 20, 'E': 50},
+    8: {'A': 100, 'B': 50, 'C': 30, 'D': 70, 'E': 0},
+    9: {'A': 100, 'B': 20, 'C': 80, 'D': 50, 'E': 60},
+    10: {'A': 100, 'B': 20, 'C': 80, 'D': 0, 'E': 50},
+    11: {'A': 0, 'B': 20, 'C': 100, 'D': 50, 'E': 80},
+    12: {'A': 100, 'B': 0, 'C': 60, 'D': 30, 'E': 50},
+    13: {'A': 100, 'B': 0, 'C': 20, 'D': 80, 'E': 50},
+    14: {'A': 80, 'B': 60, 'C': 40, 'D': 0, 'E': 50},
+    15: {'A': 100, 'B': 50, 'C': 40, 'D': 0, 'E': 20},
+    16: {'A': 0, 'B': 20, 'C': 100, 'D': 50, 'E': 80}
+};
+
+const AXES = [
+    { id: 'econ', name: 'Economía y Hacienda', qs: [1, 2], labelLeft: 'Estado de Bienestar', labelRight: 'Libre Mercado' },
+    { id: 'trab', name: 'Trabajo y Salud', qs: [3, 4, 5], labelLeft: 'Sistema Público', labelRight: 'Privatización' },
+    { id: 'seg', name: 'Seguridad y Convivencia', qs: [6, 7, 8], labelLeft: 'Prevención y Diálogo', labelRight: 'Mano Dura' },
+    { id: 'amb', name: 'Ambiente y Energía', qs: [9, 10, 11], labelLeft: 'Protección Ambiental', labelRight: 'Extractivismo' },
+    { id: 'edu', name: 'Educación y Desarrollo', qs: [12, 13], labelLeft: 'Gratuidad Universal', labelRight: 'Mérito y Crédito' },
+    { id: 'inst', name: 'Estado e Instituciones', qs: [14, 15, 16], labelLeft: 'Reforma Popular', labelRight: 'Apertura Pro-Mercado' }
+];
+
+function calculateAxisScore(answers, qs) {
+    let total = 0;
+    let count = 0;
+    qs.forEach(q => {
+        if (answers[q] && OPTION_SCORES[q] && OPTION_SCORES[q][answers[q]] !== undefined) {
+            total += OPTION_SCORES[q][answers[q]];
+            count++;
+        }
+    });
+    return count > 0 ? total / count : 50;
+}
+
 // assignVoterProfile: devuelve el perfil con mayor similitud
 function assignVoterProfile(userAnswers, voterProfiles) {
     if (!voterProfiles || voterProfiles.length === 0) return null;
@@ -564,29 +604,22 @@ function showCandidateDetail(candidate, fromResults = false) {
         </div>
     `;
 
-    // Calcular y mostrar el perfil más afín al candidato
+    // Calcular y mostrar la afinidad del candidato en los ejes
     if (quizData.voterProfiles && quizData.voterProfiles.length > 0) {
-        const candidateProfiles = rankVoterProfiles(candidate.answers, quizData.voterProfiles).slice(0, 1);
+        const candidateProfiles = rankVoterProfiles(candidate.answers, quizData.voterProfiles);
+        let profilesHtml = '<div style="margin: 2rem 0 1.5rem;">';
         
-        let profilesHtml = '<div style="margin: 2rem 0 1.5rem;"><h4 style="margin-bottom: 1rem; color: var(--text-main); font-size: 1.1rem;">Perfil de votante más afín:</h4><div class="profiles-modal-list">';
-        candidateProfiles.forEach((item, i) => {
-            const meta = getProfileMeta(item.profile.name);
-            const iconSvg = getProfileIconSVG(item.profile.name, meta.color, 28);
-            const rowBg = meta.color + '18';
-            profilesHtml += `
-                <div class="profile-rank-row animate-in" style="--profile-color: ${meta.color}; background: ${rowBg}; border-color: ${meta.color}40; padding: 0.7rem 0.9rem; animation-delay: ${i * 0.1}s;">
-                    <span class="profile-rank-pos">#${i + 1}</span>
-                    <span class="profile-rank-icon" style="font-size: 1.3rem;">${iconSvg}</span>
-                    <div class="profile-rank-info">
-                        <span class="profile-rank-name" style="color: ${meta.color}; margin-bottom: 0.2rem;">${item.profile.name}</span>
-                        <div class="profile-rank-bar-bg" style="height: 5px;">
-                            <div class="profile-rank-bar-fill" style="width: ${item.percentage}%; background: ${meta.color};"></div>
-                        </div>
-                    </div>
-                    <span class="profile-rank-pct" style="color: ${meta.color}; font-size: 0.95rem;">${item.percentage}%</span>
-                </div>`;
-        });
-        profilesHtml += '</div></div><h4 style="margin-bottom: 1rem; color: var(--text-main); border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">Respuestas al cuestionario:</h4>';
+        // Show the top matched profile info briefly
+        const topProfile = candidateProfiles[0];
+        const meta = getProfileMeta(topProfile.profile.name);
+        const iconSvg = getProfileIconSVG(topProfile.profile.name, meta.color, 24);
+        profilesHtml += `<div style="display:flex; align-items:center; gap:0.5rem; margin-bottom: 1rem;">
+            <span style="display:flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:${meta.color}18; color:${meta.color};">${iconSvg}</span>
+            <span style="font-weight:600; color:var(--text-main); font-size:1.05rem;">Perfil de votante más afín: <span style="color:${meta.color};">${topProfile.profile.name}</span></span>
+        </div>`;
+
+        profilesHtml += generateAxesHtml(candidate.answers, candidateProfiles, false);
+        profilesHtml += '</div><h4 style="margin-bottom: 1rem; color: var(--text-main); border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">Respuestas al cuestionario:</h4>';
         answersList.innerHTML += profilesHtml;
     }
 
@@ -698,7 +731,7 @@ async function showResults() {
     const assignedProfile = rankedProfiles.length > 0 ? rankedProfiles[0].profile : null;
 
     // Mostrar perfil del votante
-    renderVoterProfileCard(assignedProfile, rankedProfiles);
+    renderVoterProfileCard(assignedProfile, rankedProfiles, normalizedAnswers);
 
     // Deshabilitar botón de comentario hasta que el guardado termine
     const fbBtn = document.getElementById('feedback-submit-btn');
@@ -753,7 +786,68 @@ async function showResults() {
     document.getElementById('btn-instagram').onclick = () => shareToPlatform('instagram', top3);
 }
 
-function renderVoterProfileCard(profile, rankedProfiles) {
+function generateAxesHtml(targetAnswers, rankedProfiles, isUser = true) {
+    if (!targetAnswers || !rankedProfiles || rankedProfiles.length === 0) return '';
+    const topProfile = rankedProfiles[0].profile;
+    const topMeta = getProfileMeta(topProfile.name);
+    
+    // Reverse so the top profile is rendered last (on top)
+    const sortedRenderProfiles = [...rankedProfiles].reverse();
+    const title = isUser ? 'Tu posición vs. los perfiles' : 'Afinidad del candidato vs. los perfiles';
+    const targetLabel = isUser ? 'Tú' : 'Candidato';
+
+    const allProfilesLegend = sortedRenderProfiles.map(rp => {
+        const pMeta = getProfileMeta(rp.profile.name);
+        return `<span style="display:flex; align-items:center; gap:3px;"><div style="width:7px;height:7px;border-radius:50%;background:${pMeta.color};"></div><span style="font-size:0.6rem;opacity:0.8;">${rp.profile.name.replace('El ', '')}</span></span>`;
+    }).join('');
+
+    return `
+    <div class="axes-container" style="margin-top: 1.5rem; padding-top: 1.2rem; border-top: 1px solid rgba(30,59,112,0.1);">
+        <div style="margin-bottom:1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem;">
+                <h4 style="margin:0; color: var(--text-main); font-size: 0.95rem;">${title}</h4>
+                <div style="display:flex; gap:0.6rem; font-size:0.75rem; color:var(--text-muted); font-weight:600;">
+                    <span style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:#fff;border:2.5px solid #1e3b70;"></div>${targetLabel}</span>
+                    <span style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:${topMeta.color}; border: 1px solid rgba(0,0,0,0.1);"></div>Perfil Afín</span>
+                </div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem 0.6rem; margin-top:0.4rem; padding: 0.4rem; background:rgba(30,59,112,0.03); border-radius:8px;">
+                ${allProfilesLegend}
+            </div>
+        </div>
+        ${AXES.map(axis => {
+            const uScore = calculateAxisScore(targetAnswers, axis.qs);
+            
+            const profilesDots = sortedRenderProfiles.map(rp => {
+                const pScore = calculateAxisScore(rp.profile.type_answers || {}, axis.qs);
+                const pMeta = getProfileMeta(rp.profile.name);
+                const isTop = (rp.profile.name === topProfile.name);
+                const size = isTop ? 14 : 10;
+                const opacity = isTop ? 1 : 0.6;
+                const zIndex = isTop ? 5 : 1;
+                const border = isTop ? '1px solid rgba(0,0,0,0.2)' : 'none';
+                return `<div style="position: absolute; top: 50%; left: ${pScore}%; transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; border-radius: 50%; background: ${pMeta.color}; opacity: ${opacity}; border: ${border}; z-index: ${zIndex};" title="${rp.profile.name}"></div>`;
+            }).join('');
+
+            return `
+            <div class="axis-row" style="margin-bottom: 1.2rem;">
+                <div style="display: flex; justify-content: center; font-size: 0.85rem; color: var(--text-main); font-weight:600; margin-bottom: 4px;">
+                    <span>${axis.name}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;">
+                    <span>${axis.labelLeft}</span>
+                    <span>${axis.labelRight}</span>
+                </div>
+                <div style="position: relative; height: 8px; background: rgba(30,59,112,0.06); border-radius: 99px;">
+                    ${profilesDots}
+                    <div style="position: absolute; top: 50%; left: ${uScore}%; transform: translate(-50%, -50%); width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: 3px solid #1e3b70; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.15);" title="${targetLabel}"></div>
+                </div>
+            </div>`;
+        }).join('')}
+    </div>`;
+}
+
+function renderVoterProfileCard(profile, rankedProfiles, userAnswers) {
     const section = document.getElementById('voter-profile-section');
     if (!section) return;
 
@@ -766,23 +860,31 @@ function renderVoterProfileCard(profile, rankedProfiles) {
     const meta = getProfileMeta(profile.name);
     const iconSvg = getProfileIconSVG(profile.name, meta.color, 44);
 
+    let axesHtml = '';
+    if (userAnswers) {
+        axesHtml = generateAxesHtml(userAnswers, rankedProfiles, true);
+    }
+
     section.innerHTML = `
         <h3 class="voter-profile-heading">Tu perfil de votante</h3>
         <div class="voter-profile-card animate-in" id="voter-profile-card-btn"
-             style="--profile-color: ${meta.color}; --profile-bg: ${meta.bg}; cursor: pointer;"
-             title="Haz clic para ver el ranking de todos los perfiles">
-            <div class="voter-profile-content">
+             style="--profile-color: ${meta.color}; --profile-bg: ${meta.bg}; cursor: default;">
+            
+            <div class="voter-profile-content" style="cursor: pointer;" title="Haz clic para ver el ranking de todos los perfiles">
                 <div class="voter-profile-icon-placeholder" style="background: ${meta.bg}; border-color: ${meta.color};">${iconSvg}</div>
                 <div class="voter-profile-info">
                     <div class="voter-profile-name" style="color: ${meta.color};">${profile.name}</div>
                     ${profile.description ? `<div class="voter-profile-description">${profile.description}</div>` : ''}
                 </div>
-                <div class="voter-profile-chevron">Ver ranking ›</div>
+                <div class="voter-profile-chevron" style="align-self: center;">Ver ranking ›</div>
             </div>
+            
+            ${axesHtml}
+            
         </div>
     `;
 
-    document.getElementById('voter-profile-card-btn').addEventListener('click', () => {
+    document.querySelector('.voter-profile-content').addEventListener('click', () => {
         showProfilesModal(rankedProfiles);
     });
 }
