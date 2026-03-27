@@ -6,13 +6,13 @@ let lastResponseId = null; // guarda el id de la última respuesta guardada
 
 // --- Perfiles de Votante: metadata de colores por nombre ---
 const PROFILE_META = {
-    'El Pragmático':        { color: '#596377', bg: '#f0f2f5' },
-    'El Progresista':       { color: '#a30016', bg: '#fef2f2' },
+    'El Pragmático': { color: '#596377', bg: '#f0f2f5' },
+    'El Reformista': { color: '#a30016', bg: '#fef2f2' },
     'El Institucionalista': { color: '#0057e4', bg: '#f0f4ff' },
-    'El Liberal':           { color: '#e91212', bg: '#fff0f0' },
-    'El Ambientalista':     { color: '#5cb413', bg: '#f0fdf4' },
-    'El Reaccionario':      { color: '#222222', bg: '#f5f5f5' },
-    'El Tecnocrático':      { color: '#d1a000', bg: '#fffbeb' },
+    'El Liberal': { color: '#e91212', bg: '#fff0f0' },
+    'El Ambientalista': { color: '#5cb413', bg: '#f0fdf4' },
+    'El Conservador': { color: '#222222', bg: '#f5f5f5' },
+    'El Tecnocrático': { color: '#d1a000', bg: '#fffbeb' },
 };
 
 // SVG path data – 24×24 viewBox, stroke-based icons
@@ -21,7 +21,7 @@ const PROFILE_ICON_SVGS = {
         `<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
          <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
          <path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/>`,
-    'El Progresista': // People / Community
+    'El Reformista': // People / Community
         `<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
          <circle cx="9" cy="7" r="4"/>
          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>`,
@@ -37,7 +37,7 @@ const PROFILE_ICON_SVGS = {
     'El Ambientalista': // Leaf
         `<path d="M11 20A7 7 0 019.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
          <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>`,
-    'El Reaccionario': // Sword
+    'El Conservador': // Sword
         `<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/>
          <line x1="13" y1="19" x2="19" y2="13"/>
          <line x1="16" y1="16" x2="20" y2="20"/>
@@ -61,22 +61,22 @@ function getProfileIconSVG(name, color = 'currentColor', size = 32) {
 }
 
 const OPTION_SCORES = {
-    1: {'A': 100, 'B': 0, 'C': 10, 'D': 30, 'E': 50},
-    2: {'A': 80, 'B': 100, 'C': 30, 'D': 0, 'E': 90},
-    3: {'A': 100, 'B': 0, 'C': 50, 'D': 20, 'E': 10},
-    4: {'A': 80, 'B': 0, 'C': 50, 'D': 20, 'E': 60},
-    5: {'A': 100, 'B': 50, 'C': 0, 'D': 20, 'E': 80},
-    6: {'A': 0, 'B': 100, 'C': 20, 'D': 50, 'E': 40},
-    7: {'A': 100, 'B': 0, 'C': 80, 'D': 20, 'E': 50},
-    8: {'A': 100, 'B': 50, 'C': 30, 'D': 70, 'E': 0},
-    9: {'A': 100, 'B': 20, 'C': 80, 'D': 50, 'E': 60},
-    10: {'A': 100, 'B': 20, 'C': 80, 'D': 0, 'E': 50},
-    11: {'A': 0, 'B': 20, 'C': 100, 'D': 50, 'E': 80},
-    12: {'A': 100, 'B': 0, 'C': 60, 'D': 30, 'E': 50},
-    13: {'A': 100, 'B': 0, 'C': 20, 'D': 80, 'E': 50},
-    14: {'A': 80, 'B': 60, 'C': 40, 'D': 0, 'E': 50},
-    15: {'A': 100, 'B': 50, 'C': 40, 'D': 0, 'E': 20},
-    16: {'A': 0, 'B': 20, 'C': 100, 'D': 50, 'E': 80}
+    1: { 'A': 100, 'B': 0, 'C': 10, 'D': 30, 'E': 50 },
+    2: { 'A': 80, 'B': 100, 'C': 30, 'D': 0, 'E': 90 },
+    3: { 'A': 100, 'B': 0, 'C': 50, 'D': 20, 'E': 10 },
+    4: { 'A': 80, 'B': 0, 'C': 50, 'D': 20, 'E': 60 },
+    5: { 'A': 100, 'B': 50, 'C': 0, 'D': 20, 'E': 80 },
+    6: { 'A': 0, 'B': 100, 'C': 20, 'D': 50, 'E': 40 },
+    7: { 'A': 100, 'B': 0, 'C': 80, 'D': 20, 'E': 50 },
+    8: { 'A': 100, 'B': 50, 'C': 30, 'D': 70, 'E': 0 },
+    9: { 'A': 100, 'B': 20, 'C': 80, 'D': 50, 'E': 60 },
+    10: { 'A': 100, 'B': 20, 'C': 80, 'D': 0, 'E': 50 },
+    11: { 'A': 0, 'B': 20, 'C': 100, 'D': 50, 'E': 80 },
+    12: { 'A': 100, 'B': 0, 'C': 60, 'D': 30, 'E': 50 },
+    13: { 'A': 100, 'B': 0, 'C': 20, 'D': 80, 'E': 50 },
+    14: { 'A': 80, 'B': 60, 'C': 40, 'D': 0, 'E': 50 },
+    15: { 'A': 100, 'B': 50, 'C': 40, 'D': 0, 'E': 20 },
+    16: { 'A': 0, 'B': 20, 'C': 100, 'D': 50, 'E': 80 }
 };
 
 const AXES = [
@@ -281,7 +281,7 @@ function getShareText(top3) {
     const siteUrl = 'https://test-dilema-production.up.railway.app/';
     return userName
         ? `${userName} hizo el test Convergencia Electoral 2026 del Govlab de la Universidad de la Sabana 🗳️\n\nSus candidatos con mayor afinidad son:\n${names}\n\n¿Cuál es el tuyo? ${siteUrl}`
-        : `Hice el test Convergencia Electoral 2026 🗳️\n\nMis candidatos con mayor afinidad:\n${names}\n\n¿Cuál es el tuyo? ${siteUrl}`;
+        : `Hice el test Convergencia Electoral 2026 \n\nMis candidatos con mayor afinidad:\n${names}\n\n¿Cuál es el tuyo? ${siteUrl}`;
 }
 
 async function shareToPlatform(platform, top3) {
@@ -608,7 +608,7 @@ function showCandidateDetail(candidate, fromResults = false) {
     if (quizData.voterProfiles && quizData.voterProfiles.length > 0) {
         const candidateProfiles = rankVoterProfiles(candidate.answers, quizData.voterProfiles);
         let profilesHtml = '<div style="margin: 2rem 0 1.5rem;">';
-        
+
         // Show the top matched profile info briefly
         const topProfile = candidateProfiles[0];
         const meta = getProfileMeta(topProfile.profile.name);
@@ -790,7 +790,7 @@ function generateAxesHtml(targetAnswers, rankedProfiles, isUser = true) {
     if (!targetAnswers || !rankedProfiles || rankedProfiles.length === 0) return '';
     const topProfile = rankedProfiles[0].profile;
     const topMeta = getProfileMeta(topProfile.name);
-    
+
     // Reverse so the top profile is rendered last (on top)
     const sortedRenderProfiles = [...rankedProfiles].reverse();
     const title = isUser ? 'Tu posición vs. los perfiles' : 'Afinidad del candidato vs. los perfiles';
@@ -807,7 +807,7 @@ function generateAxesHtml(targetAnswers, rankedProfiles, isUser = true) {
             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem;">
                 <h4 style="margin:0; color: var(--text-main); font-size: 0.95rem;">${title}</h4>
                 <div style="display:flex; gap:0.6rem; font-size:0.75rem; color:var(--text-muted); font-weight:600;">
-                    <span style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:#fff;border:2.5px solid #1e3b70;"></div>${targetLabel}</span>
+                    <span style="display:flex; align-items:center; gap:4px;"><div style="width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:13px solid #1e3b70;filter:drop-shadow(0 0 2px #1e3b7088);"></div>${targetLabel}</span>
                     <span style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:${topMeta.color}; border: 1px solid rgba(0,0,0,0.1);"></div>Perfil Afín</span>
                 </div>
             </div>
@@ -816,20 +816,20 @@ function generateAxesHtml(targetAnswers, rankedProfiles, isUser = true) {
             </div>
         </div>
         ${AXES.map(axis => {
-            const uScore = calculateAxisScore(targetAnswers, axis.qs);
-            
-            const profilesDots = sortedRenderProfiles.map(rp => {
-                const pScore = calculateAxisScore(rp.profile.type_answers || {}, axis.qs);
-                const pMeta = getProfileMeta(rp.profile.name);
-                const isTop = (rp.profile.name === topProfile.name);
-                const size = isTop ? 14 : 10;
-                const opacity = isTop ? 1 : 0.6;
-                const zIndex = isTop ? 5 : 1;
-                const border = isTop ? '1px solid rgba(0,0,0,0.2)' : 'none';
-                return `<div style="position: absolute; top: 50%; left: ${pScore}%; transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; border-radius: 50%; background: ${pMeta.color}; opacity: ${opacity}; border: ${border}; z-index: ${zIndex};" title="${rp.profile.name}"></div>`;
-            }).join('');
+        const uScore = calculateAxisScore(targetAnswers, axis.qs);
 
-            return `
+        const profilesDots = sortedRenderProfiles.map(rp => {
+            const pScore = calculateAxisScore(rp.profile.type_answers || {}, axis.qs);
+            const pMeta = getProfileMeta(rp.profile.name);
+            const isTop = (rp.profile.name === topProfile.name);
+            const size = isTop ? 14 : 10;
+            const opacity = isTop ? 1 : 0.6;
+            const zIndex = isTop ? 5 : 1;
+            const border = isTop ? '1px solid rgba(0,0,0,0.2)' : 'none';
+            return `<div style="position: absolute; top: 50%; left: ${pScore}%; transform: translate(-50%, -50%); width: ${size}px; height: ${size}px; border-radius: 50%; background: ${pMeta.color}; opacity: ${opacity}; border: ${border}; z-index: ${zIndex};" title="${rp.profile.name}"></div>`;
+        }).join('');
+
+        return `
             <div class="axis-row" style="margin-bottom: 1.2rem;">
                 <div style="display: flex; justify-content: center; font-size: 0.85rem; color: var(--text-main); font-weight:600; margin-bottom: 4px;">
                     <span>${axis.name}</span>
@@ -840,10 +840,10 @@ function generateAxesHtml(targetAnswers, rankedProfiles, isUser = true) {
                 </div>
                 <div style="position: relative; height: 8px; background: rgba(30,59,112,0.06); border-radius: 99px;">
                     ${profilesDots}
-                    <div style="position: absolute; top: 50%; left: ${uScore}%; transform: translate(-50%, -50%); width: 16px; height: 16px; border-radius: 50%; background: #ffffff; border: 3px solid #1e3b70; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.15);" title="${targetLabel}"></div>
+                    <div style="position: absolute; top: 50%; left: ${uScore}%; transform: translate(-50%, -50%) translateY(-2px); width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent; border-top: 20px solid ${topMeta.color}; border-radius: 0; z-index: 10; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));" title="${targetLabel}"></div>
                 </div>
             </div>`;
-        }).join('')}
+    }).join('')}
     </div>`;
 }
 
@@ -876,7 +876,7 @@ function renderVoterProfileCard(profile, rankedProfiles, userAnswers) {
                     <div class="voter-profile-name" style="color: ${meta.color};">${profile.name}</div>
                     ${profile.description ? `<div class="voter-profile-description">${profile.description}</div>` : ''}
                 </div>
-                <div class="voter-profile-chevron" style="align-self: center;">Ver ranking ›</div>
+                <div class="voter-profile-chevron" style="align-self: center;">Tipos de perfil de votante ›</div>
             </div>
             
             ${axesHtml}
