@@ -96,6 +96,18 @@ p.description {
     object-fit: contain;
 }
 
+.landing-section-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 1.8rem 0 0.6rem 0;
+    text-align: left;
+    background: linear-gradient(to right, #1e3b70, #1a5091);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
 p.landing-text {
     text-align: left;
     margin-bottom: 1.5rem;

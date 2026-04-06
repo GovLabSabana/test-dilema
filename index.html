@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convergencia Electoral: Encuentra tu Candidato</title>
+    <title>GovTest: pedagogía política</title>
     <meta name="description"
         content="Descubre qué candidato a la presidencia se alinea mejor con tus valores y propuestas.">
     <!-- Google Fonts -->
@@ -19,38 +19,29 @@
         <!-- Main Landing -->
         <div id="landing" class="glass-card animate-in">
             <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem; margin-bottom: 2rem;">
-                <img src="Íconos/Govlab.png?v=2" alt="GovLab" style="height: 50px; object-fit: contain;">
-                <div style="display: flex; flex-direction: column; align-items: center;">
-                    <img src="Íconos/portada.jpg" class="landing-hero" alt="Portada Convergencia Electoral"
-                        style="margin-bottom: 0;">
-                    <p
-                        style="font-weight: 700; font-size: 1.2rem; color: var(--text-main); margin-top: 0.5rem; text-align: center;">
-                        Elegir es gobernar, vota</p>
-                </div>
+                <img src="Íconos/Logo.jpeg" alt="GovTest: pedagogía política" class="landing-hero" style="max-width: 340px; width: 100%; object-fit: contain; border-radius: 12px;">
             </div>
 
+            <h2 class="landing-section-title">¿Cómo funciona?</h2>
             <p class="description landing-text">
-                <strong>Gobernar es elegir entre opciones difíciles.</strong> Desde el GovLab (Laboratorio de Gobierno)
-                de la Universidad de La Sabana hemos diseñado el Test de afinidad electoral, una herramienta digital
-                para que conozcas cómo coincide tu visión del Estado con las perspectivas de quienes aspiran al poder
-                presidencial, sobre temas de economía, salud, empleo, pensiones, entre otros. ¿El resultado? Información
-                sobre tu perfil de votante y el top de candidatos con mayor afinidad según tus respuestas. ¡Esta
-                información puede ser muy útil a la hora de ejercer tu derecho al voto!
+                La herramienta se basa en un método de tres pasos que busca conectar la visión del ciudadano con la realidad del poder:
             </p>
 
             <ul class="landing-list">
-                <li><strong>1. El Candidato decide:</strong> Los aspirantes fijan su postura ante dilemas reales de
-                    política pública.</li>
-                <li><strong>2. Tú participas:</strong> Tú respondes esos mismos desafíos desde tu perspectiva.</li>
-                <li><strong>3. El algoritmo conecta:</strong> Nuestra tecnología compara tus prioridades con las de los
-                    candidatos.</li>
+                <li><strong>Dilemas de Estado:</strong> En lugar de preguntas generales, los usuarios se enfrentan a desafíos reales de política pública (en temas como salud, pensiones, economía y empleo) donde no hay respuestas fáciles.</li>
+                <li><strong>Mapeo de Candidatos:</strong> Los aspirantes presidenciales ya han fijado sus posturas técnicas ante esos mismos dilemas.</li>
+                <li><strong>Algoritmo de Convergencia:</strong> El sistema procesa las respuestas del usuario y las contrasta objetivamente con las de los candidatos.</li>
             </ul>
 
+            <h2 class="landing-section-title">¿Qué entrega al final?</h2>
             <p class="description landing-outro">
-                Al final, obtendrás un <strong>reporte de convergencia electoral</strong>: un resultado honesto sobre
-                quién representa mejor tu forma de ver el futuro del país.
+                Al terminar el test, el ciudadano recibe su <strong>Índice GovTest</strong>, que incluye:
             </p>
-            <div style="display: flex; gap: 1rem; flex-direction: column; margin-bottom: 2.5rem;">
+            <ul class="landing-list">
+                <li><strong>Perfil de Decisor:</strong> Una descripción de cómo prioriza el usuario la toma de decisiones (¿eres pragmático, estructuralista, garantista?).</li>
+                <li><strong>Ranking de Afinidad:</strong> Un listado de los candidatos que tomarían decisiones de gobierno más similares a las suyas.</li>
+            </ul>
+            <div style="display: flex; gap: 1rem; flex-direction: column; margin-top: 2rem; margin-bottom: 2.5rem;">
                 <button id="start-btn" class="btn">Empezar Test</button>
                 <!-- Oculto según solicitud, pero con la tilde correcta -->
                 <button id="view-answers-btn" class="btn secondary hidden">Conoce qué responden los candidatos</button>
